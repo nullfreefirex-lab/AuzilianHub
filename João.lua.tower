@@ -1,0 +1,190 @@
+local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+
+local Window = Rayfield:CreateWindow({
+   Name = "Auzilian Hub",
+   LoadingTitle = "Loading...",
+   LoadingSubtitle = "by John Cena",
+   ConfigurationSaving = {
+      Enabled = true,
+      FolderName = "Auzilian Hub",
+      FileName = "AuzilianHub"
+   },
+   Discord = {
+      Enabled = true,
+      Invite = "SEU_INVITE_AQUI",
+      RememberJoins = true
+   },
+   KeySystem = false,
+   KeySettings = {
+      Title = "Key System",
+      Subtitle = "Enter the key",
+      Note = "No key required",
+      FileName = "Key",
+      SaveKey = false,
+      GrabKeyFromSite = false,
+      Key = {"key"}
+   }
+})
+
+local MainTab = Window:CreateTab("Main", 4483362458)
+
+local CoinsSection = MainTab:CreateSection("Claim Coins")
+
+-- Variável global para controlar os loops
+local loopControl = {}
+
+-- Função para criar um loop para cada toggle
+local function createLoop(toggleName, remoteAction, item)
+    loopControl[toggleName] = false
+    
+    return function(Value)
+        if Value then
+            loopControl[toggleName] = true
+            task.spawn(function()
+                while loopControl[toggleName] do
+                    game:GetService("ReplicatedStorage").RemoteEvents.mapManagerRemote:FireServer(remoteAction, item)
+                    task.wait(0.1)
+                end
+            end)
+        else
+            loopControl[toggleName] = false
+        end
+    end
+end
+
+-- Toggles para coins
+MainTab:CreateToggle({
+   Name = "Claim 1.5k Coins",
+   CurrentValue = false,
+   Flag = "Toggle1",
+   Callback = createLoop("Toggle1", "claimCoins", "1.5kCoinsGiver")
+})
+
+MainTab:CreateToggle({
+   Name = "Claim 8k Coins",
+   CurrentValue = false,
+   Flag = "Toggle2",
+   Callback = createLoop("Toggle2", "claimCoins", "8kCoinsGiver")
+})
+
+MainTab:CreateToggle({
+   Name = "Claim 2k Coins",
+   CurrentValue = false,
+   Flag = "Toggle3",
+   Callback = createLoop("Toggle3", "claimCoins", "2kCoinsGiver")
+})
+
+MainTab:CreateToggle({
+   Name = "Claim 2.5k Coins",
+   CurrentValue = false,
+   Flag = "Toggle5",
+   Callback = createLoop("Toggle5", "claimCoins", "2.5kCoinsGiver")
+})
+
+local ToolsSection = MainTab:CreateSection("Claim Tools")
+
+-- Botões para ferramentas
+MainTab:CreateButton({
+   Name = "Claim Gold Carpet",
+   Callback = function()
+       game:GetService("ReplicatedStorage").RemoteEvents.mapManagerRemote:FireServer("claimTool", "Gold Carpet")
+   end
+})
+
+MainTab:CreateButton({
+   Name = "Claim Claw Slap",
+   Callback = function()
+       game:GetService("ReplicatedStorage").RemoteEvents.mapManagerRemote:FireServer("claimTool", "Claw Slap")
+   end
+})
+
+MainTab:CreateButton({
+   Name = "Claim Squid Game Slap",
+   Callback = function()
+       game:GetService("ReplicatedStorage").RemoteEvents.mapManagerRemote:FireServer("claimTool", "Squid Game Slap")
+   end
+})
+
+MainTab:CreateButton({
+   Name = "Claim Classic Timebomb",
+   Callback = function()
+       game:GetService("ReplicatedStorage").RemoteEvents.mapManagerRemote:FireServer("claimTool", "Classic Timebomb")
+   end
+})
+
+Rayfield:Notify({
+   Title = "Auzilian Hub Carregado!",
+   Content = "Divirta-se!",
+   Duration = 5
+})local ESPTab = Window:CreateTab("ESP", 4483362458)
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local highlights = {}
+local connections = {}
+local enabled = false
+
+local function addHighlight(player)
+	if player == LocalPlayer then return end
+
+	local function apply(character)
+		if highlights[player] then
+			highlights[player]:Destroy()
+		end
+
+		local h = Instance.new("Highlight")
+		h.Name = "ESPHighlight"
+		h.FillTransparency = 1
+		h.OutlineTransparency = 0
+		h.OutlineColor = Color3.fromRGB(255, 0, 0)
+		h.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+		h.Adornee = character
+		h.Parent = character
+
+		highlights[player] = h
+	end
+
+	if player.Character then
+		apply(player.Character)
+	end
+
+	connections[player] = player.CharacterAdded:Connect(apply)
+end
+
+local function removeHighlight(player)
+	if highlights[player] then
+		highlights[player]:Destroy()
+		highlights[player] = nil
+	end
+
+	if connections[player] then
+		connections[player]:Disconnect()
+		connections[player] = nil
+	end
+end
+
+ESPTab:CreateToggle({
+	Name = "Highlight",
+	CurrentValue = false,
+	Flag = "HighlightESP",
+	Callback = function(Value)
+		enabled = Value
+
+		if enabled then
+			for _, player in ipairs(Players:GetPlayers()) do
+				addHighlight(player)
+			end
+
+			playerAdded = Players.PlayerAdded:Connect(addHighlight)
+			playerRemoving = Players.PlayerRemoving:Connect(removeHighlight)
+		else
+			if playerAdded then playerAdded:Disconnect() end
+			if playerRemoving then playerRemoving:Disconnect() end
+
+			for player in pairs(highlights) do
+				removeHighlight(player)
+			end
+		end
+	end
+})
